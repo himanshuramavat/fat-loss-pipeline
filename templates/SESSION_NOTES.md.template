@@ -1,0 +1,56 @@
+# Session Notes
+
+> **How to fill this:** Generated at session close (see prompts/CLOSE_SESSION.md). Optional but useful for handoff to teammates or your next session.
+
+**Date:** {{DATE}}
+**Agent / Tool:** {{AGENT_NAME}}
+**Branch:** {{BRANCH_NAME}}
+
+---
+
+## What Was Done
+
+- {{COMPLETED_1}}
+- {{COMPLETED_2}}
+
+## Files Changed
+
+| File | Change |
+| ---- | ------ |
+| {{FILE_1}} | {{CHANGE_1}} |
+| {{FILE_2}} | {{CHANGE_2}} |
+
+## Decisions Made
+
+| Decision | Rationale | Evidence |
+| -------- | --------- | -------- |
+| {{DECISION_1}} | {{WHY_1}} | {{CITATION_1}} |
+
+## Commands Run
+
+| Command | Result |
+| ------- | ------ |
+| {{CMD_1}} | {{PASS_OR_FAIL}} |
+| {{CMD_2}} | {{PASS_OR_FAIL}} |
+
+## Memory Updates
+
+Sections updated in `AI_PROJECT_MEMORY.md`:
+
+- {{SECTION_1}} — {{WHAT_CHANGED}}
+- {{SECTION_2}} — {{WHAT_CHANGED}}
+
+## Leftover / Next Session
+
+- {{TODO_1}}
+- {{TODO_2}}
+
+## Recommended Human Doc Updates
+
+- [ ] `PROJECT_CONTEXT.md` — {{WHAT_TO_UPDATE}}
+- [ ] Changelog — {{WHAT_TO_UPDATE}}
+- [ ] README — {{WHAT_TO_UPDATE}}
+
+---
+
+**Session status:** {{COMPLETE_OR_PARTIAL}}

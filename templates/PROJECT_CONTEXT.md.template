@@ -1,0 +1,134 @@
+# PROJECT_CONTEXT.md
+
+> **How to fill this:** Copy to your project root. This is the **human-maintained source of truth**. Update it when architecture, conventions, or active work changes. AI agents should read this before making changes.
+
+## Overview
+
+| Field | Value |
+| ----- | ----- |
+| Project name | {{PROJECT_NAME}} |
+| Domain | {{BUSINESS_DOMAIN}} |
+| Target users | {{TARGET_USERS}} |
+| Repository | {{REPO_URL}} |
+| Primary contact | {{TEAM_OR_OWNER}} |
+
+### Purpose
+
+{{WHAT_THE_PROJECT_DOES_AND_WHY}}
+
+## Technology Stack
+
+| Layer | Technology |
+| ----- | ---------- |
+| Language(s) | {{LANGUAGES}} |
+| Framework(s) | {{FRAMEWORKS}} |
+| Database | {{DATABASE}} |
+| Cache / Queue | {{CACHE_QUEUE}} |
+| Auth | {{AUTH_APPROACH}} |
+| Hosting | {{HOSTING}} |
+| CI/CD | {{CI_CD}} |
+
+## Architecture
+
+### High-Level Diagram
+
+```text
+{{ASCII_OR_MERMAID_DIAGRAM}}
+```
+
+### Major Modules
+
+| Module / Directory | Responsibility |
+| ------------------ | -------------- |
+| {{PATH_1}} | {{RESPONSIBILITY_1}} |
+| {{PATH_2}} | {{RESPONSIBILITY_2}} |
+| {{PATH_3}} | {{RESPONSIBILITY_3}} |
+
+### External Integrations
+
+| Service | Purpose | Config location |
+| ------- | ------- | --------------- |
+| {{SERVICE_1}} | {{PURPOSE_1}} | {{CONFIG_1}} |
+
+## Data Model
+
+Key entities and relationships:
+
+- **{{ENTITY_1}}:** {{DESCRIPTION_1}}
+- **{{ENTITY_2}}:** {{DESCRIPTION_2}}
+
+Migrations: {{MIGRATION_TOOL_AND_LOCATION}}
+
+## API and Interfaces
+
+- **REST/GraphQL:** {{API_DESCRIPTION}}
+- **CLI:** {{CLI_OR_NONE}}
+- **Webhooks:** {{WEBHOOKS_OR_NONE}}
+- **Background jobs:** {{JOBS_OR_NONE}}
+
+## Development Workflow
+
+### Setup
+
+```bash
+{{SETUP_COMMANDS}}
+```
+
+### Branch Strategy
+
+{{BRANCH_STRATEGY}}
+
+### Pull Request Requirements
+
+- {{PR_REQUIREMENT_1}}
+- {{PR_REQUIREMENT_2}}
+
+## Engineering Conventions
+
+### Naming
+
+- Files: {{FILE_NAMING}}
+- Components/classes: {{COMPONENT_NAMING}}
+- Database tables: {{TABLE_NAMING}}
+
+### Patterns
+
+- {{PATTERN_1}}
+- {{PATTERN_2}}
+
+### Testing
+
+- Test location: {{TEST_LOCATION}}
+- Required coverage: {{COVERAGE_POLICY}}
+- Run: `{{TEST_COMMAND}}`
+
+## Active Development
+
+### Current Focus
+
+- {{CURRENT_WORK_1}}
+- {{CURRENT_WORK_2}}
+
+### Known Technical Debt
+
+- {{DEBT_1}}
+- {{DEBT_2}}
+
+## Risks and Sensitive Areas
+
+| Area | Risk | Extra verification |
+| ---- | ---- | ------------------ |
+| {{AREA_1}} | {{RISK_1}} | {{VERIFY_1}} |
+| {{AREA_2}} | {{RISK_2}} | {{VERIFY_2}} |
+
+## Important Decisions
+
+| Date | Decision | Rationale |
+| ---- | -------- | --------- |
+| {{DATE_1}} | {{DECISION_1}} | {{RATIONALE_1}} |
+
+## Changelog (manual)
+
+| Date | Change |
+| ---- | ------ |
+| {{DATE}} | Initial context document created |

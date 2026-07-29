@@ -1,0 +1,77 @@
+# CLAUDE.md (Agent Operating Rules)
+
+> **How to fill this:** Copy to `CLAUDE.md`, `AGENTS.md`, or your tool's equivalent rules file. Replace all `{{PLACEHOLDER}}` values. Keep it concise — agents read this on every session.
+
+## Project Identity
+
+- **Name:** {{PROJECT_NAME}}
+- **Purpose:** {{ONE_LINE_PURPOSE}}
+- **Primary stack:** {{LANGUAGES_AND_FRAMEWORKS}}
+
+## Before Making Changes
+
+1. Read `PROJECT_CONTEXT.md` if it exists.
+2. Read `AI_PROJECT_MEMORY.md` if it exists.
+3. Understand the files involved before editing.
+4. Do not modify code outside the scope of the current task.
+5. Run relevant tests or lint checks before claiming work is complete.
+
+## Local Development
+
+```bash
+# Install dependencies
+{{INSTALL_COMMAND}}
+
+# Start dev server
+{{DEV_COMMAND}}
+
+# Run tests
+{{TEST_COMMAND}}
+
+# Run linter
+{{LINT_COMMAND}}
+```
+
+## Environment
+
+- Copy `{{ENV_EXAMPLE_FILE}}` to `{{ENV_LOCAL_FILE}}` and fill required values.
+- Required env vars: {{REQUIRED_ENV_VARS}}
+
+## Architecture Quick Reference
+
+- **Entry point:** {{ENTRY_POINT}}
+- **API layer:** {{API_LOCATION}}
+- **Database:** {{DB_TYPE_AND_LOCATION}}
+- **Background jobs:** {{JOBS_OR_NONE}}
+
+## Coding Conventions
+
+- {{CONVENTION_1}}
+- {{CONVENTION_2}}
+- {{CONVENTION_3}}
+
+## High-Risk Areas
+
+Do not change without explicit approval and extra verification:
+
+- {{RISK_AREA_1}}
+- {{RISK_AREA_2}}
+
+## Common Pitfalls
+
+- {{PITFALL_1}}
+- {{PITFALL_2}}
+
+## Verification Checklist
+
+Before marking a task complete:
+
+- [ ] {{VERIFY_STEP_1}}
+- [ ] {{VERIFY_STEP_2}}
+- [ ] No unrelated files modified
+
+## When Stuck
+
+- Check `docs/` and `ARCHITECTURE.md`
+- Search git history for related changes: `git log --oneline -- {{RELEVANT_PATH}}`
+- Ask the user 1–2 focused questions rather than guessing
