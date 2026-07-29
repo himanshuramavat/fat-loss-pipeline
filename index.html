@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fitness.build — deployment pipeline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #0f1117;
+    --bg-elev: #171a24;
+    --bg-card: #1b1f2b;
+    --line: #262b3a;
+    --text: #e7e9f1;
+    --muted: #8189a3;
+    --pass: #34d399;
+    --pass-dim: #1c3d33;
+    --pending: #f0b429;
+    --pending-dim: #3a2f14;
+    --fail: #f16d6d;
+    --accent: #7c9cff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 20% 0%, #161a2680 0%, transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:20px 14px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  .terminal-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 12px;background:var(--bg-elev);
+    border:1px solid var(--line);border-radius:8px 8px 0 0;
+  }
+  .dot{width:9px;height:9px;border-radius:50%;}
+  .dot.r{background:#f16d6d;} .dot.y{background:#f0b429;} .dot.g{background:#34d399;}
+  .terminal-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-left:8px;}
+
+  header{
+    background:var(--bg-card);
+    border:1px solid var(--line);border-top:none;
+    border-radius:0 0 10px 10px;
+    padding:20px 18px 18px;
+    margin-bottom:18px;
+  }
+  .pipeline-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.5px;}
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;margin:6px 0 14px;font-weight:700;
+    color:var(--text);
+  }
+  .status-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .badge{
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+    padding:4px 10px;border-radius:20px;letter-spacing:.4px;
+  }
+  .badge.pass{background:var(--pass-dim);color:var(--pass);}
+  .badge.build{background:#1e2540;color:var(--accent);}
+  .streak{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
+  .streak b{color:var(--pending);}
+
+  .progress-track{
+    margin-top:14px;height:6px;background:var(--bg-elev);
+    border-radius:4px;overflow:hidden;border:1px solid var(--line);
+  }
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--pass));width:0%;transition:width .4s ease;}
+
+  nav.tabs{
+    display:flex;gap:6px;margin-bottom:16px;
+    background:var(--bg-card);border:1px solid var(--line);
+    border-radius:10px;padding:5px;
+  }
+  nav.tabs button{
+    flex:1;padding:10px 4px;border:none;background:transparent;
+    color:var(--muted);font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;font-weight:600;border-radius:7px;cursor:pointer;
+    letter-spacing:.2px;
+  }
+  nav.tabs button.active{background:var(--bg-elev);color:var(--text);box-shadow:0 0 0 1px var(--line) inset;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .week-title{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);
+    margin:18px 2px 8px;letter-spacing:.4px;text-transform:uppercase;
+  }
+
+  .day-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+    padding:14px 14px 10px;margin-bottom:10px;
+  }
+  .day-card.done{border-color:var(--pass);background:linear-gradient(180deg,#152420,var(--bg-card) 60%);}
+  .day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .day-title{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;}
+  .day-type{font-size:10.5px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:12px;}
+  .day-type.circuit{background:#1e2540;color:var(--accent);}
+  .day-type.walk{background:var(--pass-dim);color:var(--pass);}
+  .day-type.rest{background:var(--pending-dim);color:var(--pending);}
+
+  .task{
+    display:flex;align-items:center;gap:9px;padding:6px 2px;
+    font-size:13.5px;color:var(--text);cursor:pointer;user-select:none;
+  }
+  .task input{display:none;}
+  .checkbox{
+    width:17px;height:17px;border-radius:5px;border:1.5px solid var(--line);
+    flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:var(--pass);background:var(--bg-elev);
+  }
+  .task input:checked ~ .checkbox{border-color:var(--pass);background:var(--pass-dim);}
+  .task input:checked ~ .label{color:var(--muted);text-decoration:line-through;}
+
+  .desk-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+    padding:16px;margin-bottom:12px;
+  }
+  .desk-card h3{
+    font-family:'JetBrains Mono',monospace;font-size:13px;margin:0 0 6px;
+    color:var(--accent);
+  }
+  .desk-card p{margin:0;font-size:13.5px;line-height:1.55;color:var(--text);}
+  .desk-card .tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);
+    margin-bottom:4px;display:block;
+  }
+
+  .nutri-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 14px;background:var(--bg-card);border:1px solid var(--line);
+    border-radius:10px;margin-bottom:8px;font-size:13.5px;
+  }
+  .nutri-row .x{color:var(--fail);font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .nutri-row .ok{color:var(--pass);font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+  footer{
+    text-align:center;font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;color:var(--muted);margin-top:24px;
+  }
+
+  .sched-table{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+    overflow:hidden;margin-bottom:6px;
+  }
+  .sched-head, .sched-row{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    padding:10px 14px;font-size:12.5px;align-items:center;
+  }
+  .sched-head{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line);
+  }
+  .sched-row{border-bottom:1px solid var(--line);}
+  .sched-row:last-child{border-bottom:none;}
+  .sched-row > span:first-child{font-family:'JetBrains Mono',monospace;color:var(--text);font-weight:600;}
+  .tag-circuit, .tag-walk, .tag-rest{
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+    padding:2px 8px;border-radius:12px;justify-self:start;
+  }
+  .tag-circuit{background:#1e2540;color:var(--accent);}
+  .tag-walk{background:var(--pass-dim);color:var(--pass);}
+  .tag-rest{background:var(--pending-dim);color:var(--pending);}
+
+  .timer-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:12px;
+    padding:22px 18px;text-align:center;margin-bottom:12px;
+  }
+  .timer-select{display:flex;gap:8px;justify-content:center;margin-bottom:18px;}
+  .dur-btn{
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;
+    padding:7px 16px;border-radius:20px;border:1px solid var(--line);
+    background:var(--bg-elev);color:var(--muted);cursor:pointer;
+  }
+  .dur-btn.active{border-color:var(--accent);color:var(--accent);background:#1a2036;}
+
+  .timer-phase{
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--pending);margin-bottom:6px;font-weight:600;
+  }
+  .timer-clock{
+    font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:700;
+    color:var(--text);line-height:1;margin-bottom:6px;
+  }
+  .timer-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+
+  .phase-track{
+    display:flex;height:8px;border-radius:5px;overflow:hidden;margin-bottom:20px;
+    background:var(--bg-elev);border:1px solid var(--line);
+  }
+  .phase-seg{height:100%;position:relative;}
+  .phase-seg.warmup{background:var(--pending-dim);}
+  .phase-seg.brisk{background:var(--pass-dim);}
+  .phase-seg.cooldown{background:#1e2540;}
+  .phase-seg::after{
+    content:'';position:absolute;top:0;left:0;height:100%;width:var(--fill,0%);
+  }
+  .phase-seg.warmup::after{background:var(--pending);}
+  .phase-seg.brisk::after{background:var(--pass);}
+  .phase-seg.cooldown::after{background:var(--accent);}
+
+  .timer-controls{display:flex;gap:10px;justify-content:center;}
+  .timer-btn{
+    font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;
+    padding:11px 26px;border-radius:8px;border:1px solid var(--line);
+    background:var(--bg-elev);color:var(--text);cursor:pointer;
+  }
+  .timer-btn.primary{background:var(--pass-dim);color:var(--pass);border-color:var(--pass);}
+
+  .reset-link{
+    display:block;text-align:center;margin-top:14px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;
+    color:var(--muted);background:none;border:none;cursor:pointer;
+    text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="terminal-bar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span class="terminal-label">himanshu / fat-loss-pipeline</span>
+  </div>
+
+  <header>
+    <div class="pipeline-name">// deployment: body-recomposition-v1</div>
+    <h1>Fat Loss Build Pipeline</h1>
+    <div class="status-row">
+      <span class="badge build" id="buildBadge">build #1</span>
+      <span class="badge pass" id="statusBadge">passing</span>
+      <span class="streak">streak: <b id="streakCount">0</b> days</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-panel="w12">week 1-2</button>
+    <button class="tab-btn" data-panel="w34">week 3-4</button>
+    <button class="tab-btn" data-panel="desk">desk mode</button>
+    <button class="tab-btn" data-panel="nutri">nutrition</button>
+    <button class="tab-btn" data-panel="walk">walk timer</button>
+    <button class="tab-btn" data-panel="schedule">schedule</button>
+  </nav>
+
+  <div class="panel active" id="w12"></div>
+  <div class="panel" id="w34"></div>
+
+  <div class="panel" id="desk">
+    <div class="desk-card">
+      <span class="tag">// background job — every 45-60 min</span>
+      <h3>Get up, no exceptions</h3>
+      <p>Set a silent phone alarm every 45-60 minutes while coding. Stand, walk to get water, look at something far away. Sitting for hours straight is its own risk factor, separate from diet.</p>
+    </div>
+    <div class="desk-card">
+      <span class="tag">// posture check</span>
+      <h3>Feet flat, screen at eye level</h3>
+      <p>Feet flat on the floor, knees at roughly 90°, screen top edge at eye level so you're not hunching forward. If your setup forces you to look down all day, a stack of books under the monitor fixes it for free.</p>
+    </div>
+    <div class="desk-card">
+      <span class="tag">// micro-stretch loop</span>
+      <h3>60 seconds between builds</h3>
+      <p>While code compiles or a page loads: neck rolls, shoulder rolls back, and a standing back-bend. Small, but it adds up over an 8-10 hour sitting day.</p>
+    </div>
+    <div class="desk-card">
+      <span class="tag">// snack process</span>
+      <h3>Keep desk snacking intentional</h3>
+      <p>Mindless snacking while debugging is an easy calorie leak. Keep roasted chana, makhana, or fruit at your desk instead of biscuits or chips, so the default reach is a better one.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="nutri">
+    <div class="nutri-row"><span>Protein in every meal — dal, paneer, curd, sprouts</span><span class="ok">keep</span></div>
+    <div class="nutri-row"><span>Sugar in tea/coffee</span><span class="x">cut</span></div>
+    <div class="nutri-row"><span>Fried snacks &amp; cold drinks</span><span class="x">cut</span></div>
+    <div class="nutri-row"><span>Maida items (bread, bakery)</span><span class="x">reduce</span></div>
+    <div class="nutri-row"><span>Water — 3+ litres/day</span><span class="ok">keep</span></div>
+    <div class="nutri-row"><span>Home food, smaller portions</span><span class="ok">keep</span></div>
+  </div>
+
+  <div class="panel" id="walk">
+    <div class="timer-card">
+      <div class="timer-select" id="durationSelect">
+        <button class="dur-btn active" data-mins="30">30 min</button>
+        <button class="dur-btn" data-mins="40">40 min</button>
+      </div>
+
+      <div class="timer-phase" id="phaseLabel">warm-up</div>
+      <div class="timer-clock" id="clockDisplay">05:00</div>
+      <div class="timer-sub" id="phaseSub">easy pace · settle in</div>
+
+      <div class="phase-track">
+        <div class="phase-seg warmup" id="segWarmup"></div>
+        <div class="phase-seg brisk" id="segBrisk"></div>
+        <div class="phase-seg cooldown" id="segCooldown"></div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="timer-btn primary" id="startPauseBtn">start</button>
+        <button class="timer-btn" id="resetTimerBtn">reset</button>
+      </div>
+    </div>
+
+    <div class="desk-card">
+      <span class="tag">// pace check</span>
+      <h3>Talk test</h3>
+      <p>During the brisk phase you should be able to talk in short sentences, not sing. If you can chat easily, speed up. If you can't get a sentence out, slow down slightly.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="schedule">
+    <div class="week-title">Which days are circuit vs walk</div>
+
+    <div class="sched-table">
+      <div class="sched-head"><span>Day</span><span>Week 1-2</span><span>Week 3-4</span></div>
+      <div class="sched-row"><span>Mon</span><span class="tag-circuit">circuit</span><span class="tag-circuit">circuit</span></div>
+      <div class="sched-row"><span>Tue</span><span class="tag-walk">walk only</span><span class="tag-circuit">circuit</span></div>
+      <div class="sched-row"><span>Wed</span><span class="tag-circuit">circuit</span><span class="tag-walk">walk only</span></div>
+      <div class="sched-row"><span>Thu</span><span class="tag-walk">walk only</span><span class="tag-circuit">circuit</span></div>
+      <div class="sched-row"><span>Fri</span><span class="tag-circuit">circuit</span><span class="tag-circuit">circuit</span></div>
+      <div class="sched-row"><span>Sat</span><span class="tag-walk">walk only</span><span class="tag-walk">walk only</span></div>
+      <div class="sched-row"><span>Sun</span><span class="tag-rest">rest</span><span class="tag-rest">rest</span></div>
+    </div>
+
+    <div class="week-title">Daily timeline</div>
+
+    <div class="desk-card">
+      <span class="tag">// circuit day — Mon / Wed / Fri (wk1-2), Mon/Tue/Thu/Fri (wk3-4)</span>
+      <h3>~50-55 min morning block</h3>
+      <p>
+        5:45-6:00 — wake up<br>
+        6:00-6:35 — brisk walk (30-35 min)<br>
+        6:35-6:55 — bodyweight circuit (15-20 min)<br>
+        6:55-7:15 — shower<br>
+        7:15-7:45 — protein breakfast + black coffee<br>
+        7:45-9:15 — get ready + commute
+      </p>
+    </div>
+
+    <div class="desk-card">
+      <span class="tag">// walk-only day — Tue/Sat (wk1-2), Wed/Sat (wk3-4)</span>
+      <h3>~35-40 min morning block</h3>
+      <p>
+        5:45-6:00 — wake up<br>
+        6:00-6:40 — brisk walk (30-40 min, full length)<br>
+        6:40-7:00 — shower<br>
+        7:00-7:30 — protein breakfast + black coffee<br>
+        7:30-9:15 — get ready + commute
+      </p>
+    </div>
+
+    <div class="desk-card">
+      <span class="tag">// rest day — Sunday</span>
+      <h3>No walk, no circuit</h3>
+      <p>Sleep in a bit if needed, but keep meal timing and water intake the same. Full rest from workouts, not from the rest of the routine.</p>
+    </div>
+
+    <div class="desk-card">
+      <span class="tag">// every evening, regardless of day type</span>
+      <h3>~9 PM onward</h3>
+      <p>
+        9:00-9:30 — reach home, light dinner<br>
+        9:30-10:15 — wind down, desk stretches, no heavy screen time<br>
+        10:30-11:00 — sleep
+      </p>
+    </div>
+  </div>
+
+  <button class="reset-link" id="resetBtn">reset all progress</button>
+  <footer>run daily · rest day skips workout, not water/protein</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'fitpipe-days-v1';
+let state = {};
+
+const week12Pattern = ['circuit','walk','circuit','walk','circuit','walk','rest'];
+const week34Pattern = ['circuit','circuit','walk','circuit','circuit','walk','rest'];
+
+function tasksFor(type, week){
+  if(type === 'rest'){
+    return ['Full rest — no walk, no circuit','3+ litres water','Protein in every meal'];
+  }
+  const walkMin = week <= 2 ? '30 min' : '40 min';
+  const rounds = week <= 2 ? '3 rounds' : '4 rounds';
+  const t = [`Walk ${walkMin}`];
+  if(type === 'circuit'){
+    t.push(`Bodyweight circuit — ${rounds}`);
+  }
+  t.push('3+ litres water', 'Protein in every meal', 'No sugar tea / fried snacks');
+  return t;
+}
+
+function buildDays(){
+  const days = [];
+  for(let d = 1; d <= 28; d++){
+    const week = Math.ceil(d/7);
+    const pattern = week <= 2 ? week12Pattern : week34Pattern;
+    const type = pattern[(d-1) % 7];
+    days.push({ id: d, week, type, tasks: tasksFor(type, week) });
+  }
+  return days;
+}
+const ALL_DAYS = buildDays();
+
+function renderPanel(panelId, days){
+  const el = document.getElementById(panelId);
+  let html = '';
+  let currentWeek = null;
+  days.forEach(day => {
+    if(day.week !== currentWeek){
+      currentWeek = day.week;
+      html += `<div class="week-title">Week ${currentWeek}</div>`;
+    }
+    const dayState = state[day.id] || {};
+    const doneCount = day.tasks.filter((_,i) => dayState[i]).length;
+    const isDone = doneCount === day.tasks.length;
+    html += `<div class="day-card ${isDone ? 'done' : ''}" data-day="${day.id}">
+      <div class="day-head">
+        <span class="day-title">Day ${day.id}</span>
+        <span class="day-type ${day.type}">${day.type}</span>
+      </div>`;
+    day.tasks.forEach((task, i) => {
+      const checked = dayState[i] ? 'checked' : '';
+      html += `<label class="task">
+        <input type="checkbox" data-day="${day.id}" data-idx="${i}" ${checked}>
+        <span class="checkbox">${dayState[i] ? '✓' : ''}</span>
+        <span class="label">${task}</span>
+      </label>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderAll(){
+  renderPanel('w12', ALL_DAYS.filter(d => d.week <= 2));
+  renderPanel('w34', ALL_DAYS.filter(d => d.week > 2));
+  attachCheckboxListeners();
+  updateHeader();
+}
+
+function attachCheckboxListeners(){
+  document.querySelectorAll('.task input').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const day = e.target.dataset.day;
+      const idx = e.target.dataset.idx;
+      if(!state[day]) state[day] = {};
+      state[day][idx] = e.target.checked;
+      await saveState();
+      renderAll();
+    });
+  });
+}
+
+function updateHeader(){
+  let completedDays = 0;
+  let streak = 0;
+  let streakBroken = false;
+  ALL_DAYS.forEach(day => {
+    const dayState = state[day.id] || {};
+    const doneCount = day.tasks.filter((_,i) => dayState[i]).length;
+    const isDone = doneCount === day.tasks.length && doneCount > 0;
+    if(isDone) completedDays++;
+    if(isDone && !streakBroken){
+      streak++;
+    } else if(!isDone && dayState && Object.keys(dayState).length === 0){
+      // untouched day, don't break streak count from the start
+    } else if(!isDone){
+      streakBroken = true;
+    }
+  });
+  document.getElementById('buildBadge').textContent = `build #${completedDays + 1}`;
+  document.getElementById('streakCount').textContent = streak;
+  const pct = Math.round((completedDays / 28) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  const statusBadge = document.getElementById('statusBadge');
+  if(completedDays === 0){
+    statusBadge.textContent = 'not started';
+    statusBadge.className = 'badge build';
+  } else if(completedDays === 28){
+    statusBadge.textContent = 'shipped';
+    statusBadge.className = 'badge pass';
+  } else {
+    statusBadge.textContent = 'passing';
+    statusBadge.className = 'badge pass';
+  }
+}
+
+async function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state = JSON.parse(raw);
+    }
+  }catch(e){
+    state = {};
+  }
+}
+
+async function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error('save failed', e);
+  }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if(confirm('Reset all 28 days of progress? This cannot be undone.')){
+    state = {};
+    await saveState();
+    renderAll();
+  }
+});
+
+(async () => {
+  await loadState();
+  renderAll();
+})();
+
+// ---- Walk Timer ----
+let totalMinutes = 30;
+let phases = [];
+let phaseIndex = 0;
+let secondsLeftInPhase = 0;
+let timerInterval = null;
+let isRunning = false;
+
+function buildPhases(mins){
+  const warmup = 5;
+  const cooldown = mins >= 40 ? 4 : 3;
+  const brisk = mins - warmup - cooldown;
+  return [
+    { name:'warm-up', sub:'easy pace · settle in', secs: warmup*60, cls:'warmup' },
+    { name:'brisk pace', sub:'talk-test breathless, keep it steady', secs: brisk*60, cls:'brisk' },
+    { name:'cool-down', sub:'slow it down, let heart rate settle', secs: cooldown*60, cls:'cooldown' },
+  ];
+}
+
+function formatClock(secs){
+  const m = Math.floor(secs/60).toString().padStart(2,'0');
+  const s = Math.floor(secs%60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+function renderTimerSegments(){
+  const total = phases.reduce((a,p)=>a+p.secs,0);
+  const ids = { warmup:'segWarmup', brisk:'segBrisk', cooldown:'segCooldown' };
+  phases.forEach(p => {
+    const el = document.getElementById(ids[p.cls]);
+    el.style.flex = p.secs;
+  });
+  updateSegmentFill();
+}
+
+function updateSegmentFill(){
+  const ids = { warmup:'segWarmup', brisk:'segBrisk', cooldown:'segCooldown' };
+  phases.forEach((p, i) => {
+    const el = document.getElementById(ids[p.cls]);
+    let fill = 0;
+    if(i < phaseIndex) fill = 100;
+    else if(i === phaseIndex) fill = Math.round(((p.secs - secondsLeftInPhase)/p.secs)*100);
+    el.style.setProperty('--fill', fill + '%');
+  });
+}
+
+function renderTimerFace(){
+  const phase = phases[phaseIndex];
+  document.getElementById('phaseLabel').textContent = phase.name;
+  document.getElementById('phaseSub').textContent = phase.sub;
+  document.getElementById('clockDisplay').textContent = formatClock(secondsLeftInPhase);
+  updateSegmentFill();
+}
+
+function beep(freq=880, dur=180){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + dur/1000);
+  }catch(e){}
+}
+
+function tick(){
+  secondsLeftInPhase--;
+  if(secondsLeftInPhase < 0){
+    if(phaseIndex < phases.length - 1){
+      phaseIndex++;
+      secondsLeftInPhase = phases[phaseIndex].secs;
+      beep(660, 250);
+    } else {
+      beep(990, 400);
+      pauseTimer();
+      secondsLeftInPhase = 0;
+      renderTimerFace();
+      document.getElementById('phaseLabel').textContent = 'done';
+      document.getElementById('phaseSub').textContent = 'walk complete — nice work';
+      document.getElementById('startPauseBtn').textContent = 'start';
+      return;
+    }
+  }
+  renderTimerFace();
+}
+
+function startTimer(){
+  isRunning = true;
+  document.getElementById('startPauseBtn').textContent = 'pause';
+  timerInterval = setInterval(tick, 1000);
+}
+
+function pauseTimer(){
+  isRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('startPauseBtn').textContent = 'resume';
+}
+
+function resetTimer(){
+  pauseTimer();
+  phases = buildPhases(totalMinutes);
+  phaseIndex = 0;
+  secondsLeftInPhase = phases[0].secs;
+  renderTimerSegments();
+  renderTimerFace();
+  document.getElementById('startPauseBtn').textContent = 'start';
+}
+
+document.querySelectorAll('.dur-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    totalMinutes = parseInt(btn.dataset.mins, 10);
+    resetTimer();
+  });
+});
+
+document.getElementById('startPauseBtn').addEventListener('click', () => {
+  if(secondsLeftInPhase === 0 && phaseIndex === phases.length - 1 && !isRunning){
+    resetTimer();
+    startTimer();
+    return;
+  }
+  if(isRunning) pauseTimer(); else startTimer();
+});
+
+document.getElementById('resetTimerBtn').addEventListener('click', resetTimer);
+
+resetTimer();
+</script>
+</body>
+</html>
