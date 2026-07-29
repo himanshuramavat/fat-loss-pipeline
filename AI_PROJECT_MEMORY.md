@@ -42,7 +42,8 @@ fat-loss-pipeline/
 - Zero-build static site: edit `index.html`, open locally or push to deploy.
 - Plan data is generated in JS (`buildDays` / `tasksFor` / week patterns), not a separate data file.
 - Checkbox state is `{ [dayId]: { [taskIndex]: boolean } }` — **task order is the schema**.
-- Deploy artifact path is `.` (whole repo) — onboarding docs are committed on purpose and will be public on Pages; do not gitignore them.
+- Deploy artifact path is `.` (whole repo) — onboarding docs are committed on purpose and will be public on Pages.
+- Ignore only local junk / session artifacts via `.gitignore` (`TASK_BRIEF.md`, `SESSION_NOTES.md`, editor/OS files) — not the onboarding kit.
 - Streak: keep current plan-day logic; owner has no preferred redesign yet — do not change without an explicit ask.
 
 ## Conventions (Easy to Violate)

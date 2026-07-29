@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*~
+
+# Daily-ops session artifacts (local only)
+TASK_BRIEF.md
+SESSION_NOTES.md
