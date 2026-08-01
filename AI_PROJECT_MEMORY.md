@@ -1,6 +1,6 @@
 # AI Project Memory
 
-> Short, high-signal context for future AI sessions. Update when architecture or conventions change.
+> Short, high-signal context for future AI sessions. Update when architecture or convention changes occur.
 
 **Last updated:** 2026-07-29
 **Source report:** AI_PROJECT_CONTEXT_REPORT.md
@@ -9,107 +9,110 @@
 
 ## What This Project Is
 
-A personal **28-day fat-loss / body-recomposition tracker** presented as a “CI/CD pipeline” UI. One static page (`index.html`) with checklists, desk tips, nutrition rules, walk timer, and schedule. Progress lives in browser `localStorage`. Live on **GitHub Pages** at https://himanshuramavat.github.io/fat-loss-pipeline/.
+A personal **28-day fat-loss / body-recomposition tracker** presented as a “CI/CD pipeline” UI.
+
+- **Web:** single static page ([`index.html`](./index.html)) on GitHub Pages.
+- **Mobile:** Expo React Native app in [`mobile/`](./mobile/) (managed workflow, Expo Go + EAS APK).
+
+Progress keys share the same shape/`fitpipe-days-v1` name but are **not synced** between web and phone.
 
 ## Stack at a Glance
 
-- **Language:** HTML / CSS / vanilla JavaScript (single file)
-- **Framework:** None
-- **Database:** None (`localStorage` key `fitpipe-days-v1`)
-- **Auth:** None
-- **Deploy:** GitHub Actions → GitHub Pages (`https://himanshuramavat.github.io/fat-loss-pipeline/`)
+- **Web:** HTML / CSS / vanilla JS → GitHub Pages (`https://himanshuramavat.github.io/fat-loss-pipeline/`)
+- **Mobile:** Expo SDK **54**, React Native, TypeScript, React Navigation material top tabs
+- **Mobile storage:** `@react-native-async-storage/async-storage` (`fitpipe-days-v1`)
+- **Mobile alerts:** `expo-notifications` (local only), `expo-av` beep, `expo-keep-awake` during walks
+- **Mobile deploy:** Expo Go for dev; `eas build -p android --profile preview` for APK
 
 ## Structure
 
 ```text
 fat-loss-pipeline/
-├── index.html                 # entire app (UI + logic)
+├── index.html                 # web app (Pages)
 ├── .github/workflows/static.yml
-├── AI_PROJECT_CONTEXT_REPORT.md
-├── AI_PROJECT_MEMORY.md
-├── PROJECT_ONBOARDING_PROMPT.md / DAILY_OPS.md / prompts/ / templates/ / examples/
-└── (no package manager, tests, or README yet)
+├── mobile/                    # Expo RN app
+│   ├── App.tsx
+│   ├── app.json / eas.json
+│   ├── README.md              # Expo Go + EAS instructions
+│   └── src/
+├── AI_PROJECT_*.md / DAILY_OPS.md / prompts/ / templates/
+└── .gitignore                 # OS/editor + session notes + mobile/node_modules/.expo
 ```
 
 | Path | Purpose |
 | ---- | ------- |
-| `index.html` | App: 28-day plan, progress, timer, static guidance panels |
-| `.github/workflows/static.yml` | Deploy repo root to Pages |
-| `DAILY_OPS.md` + `prompts/` | Post-onboarding AI workflows |
+| `index.html` | Web tracker |
+| `mobile/` | Phone app (port of the web UI) |
+| `mobile/src/data/plan.ts` | Shared plan logic (patterns, tasks, phases) |
+| `.github/workflows/static.yml` | Pages deploy (repo root; `node_modules` gitignored) |
 
 ## Critical Decisions
 
-- Zero-build static site: edit `index.html`, open locally or push to deploy.
-- Plan data is generated in JS (`buildDays` / `tasksFor` / week patterns), not a separate data file.
-- Checkbox state is `{ [dayId]: { [taskIndex]: boolean } }` — **task order is the schema**.
-- Deploy artifact path is `.` (whole repo) — onboarding docs are committed on purpose and will be public on Pages.
-- Ignore only local junk / session artifacts via `.gitignore` (`TASK_BRIEF.md`, `SESSION_NOTES.md`, editor/OS files) — not the onboarding kit.
-- Streak: keep current plan-day logic; owner has no preferred redesign yet — do not change without an explicit ask.
+- Keep Pages site and Expo app **side by side** (`mobile/` subdirectory).
+- Storage key/task order must stay aligned with web if sync is ever added.
+- Streak: keep current plan-day logic; no redesign unless explicitly requested.
+- Walk timer: wall-clock sync + local phase notifications (JS timers pause in background).
+- Local notifications only — never call Expo push token APIs (breaks Expo Go Android).
 
 ## Conventions (Easy to Violate)
 
-- Keep product changes in `index.html` unless deploy/docs intentionally change.
-- Prefer camelCase JS, kebab-case CSS, versioned storage keys (`…-v1`).
-- Schedule panel copy must stay consistent with `week12Pattern` / `week34Pattern`.
-- Do not reorder or insert tasks mid-list without bumping `STORAGE_KEY` or migrating state.
-- No bundler/modules — avoid introducing a build step without an explicit decision.
+- Web product changes: `index.html`. Mobile: `mobile/src/**`.
+- Do not reorder checklist tasks without bumping storage key / migration.
+- Schedule copy must match `week12Pattern` / `week34Pattern`.
+- Ignore session artifacts via `.gitignore` (`TASK_BRIEF.md`, `SESSION_NOTES.md`); do not ignore the onboarding kit.
 
 ## Common Pitfalls
 
-- Changing task strings/order silently breaks meaning of saved checkbox indices.
-- “Streak” currently counts consecutive completed plan days from the program start logic in `updateHeader` — not a calendar streak; leave as-is unless asked.
-- Timer state is **not** persisted; only day checkboxes are.
-- `renderAll()` rebuilds DOM and rebinds listeners on every checkbox change.
-- Pushing to `master` deploys immediately.
+- Editing only the web app leaves the phone app stale (and vice versa).
+- Committing `mobile/node_modules` — must stay gitignored.
+- Relying on `setInterval` alone for walk phases while backgrounded.
+- Pushing to `master` redeploys Pages (web only).
 
 ## Active Development
 
-- Product app appears complete for v1 (HTML app + Pages workflow).
-- AI onboarding kit + `AI_PROJECT_*.md` are first-class repo docs (committed, not ignored).
-- No automated tests or README yet.
+- Mobile Expo port implemented under `mobile/`.
+- Web v1 remains live on Pages.
+- No automated tests yet.
 
 ## When Touching X, Also Check Y
 
 | If you change... | Also verify... |
 | ---------------- | -------------- |
-| `tasksFor` / day patterns | Schedule panel HTML + storage key compatibility |
-| Header / streak / progress math | Empty, partial, full 28-day, and reset scenarios |
-| Walk timer phases | 30 and 40 min totals; pause/resume/reset; beeps |
-| `static.yml` path or triggers | What actually gets published on Pages |
-| Visual theme / tabs | All six panels still switch and render |
+| `tasksFor` / patterns (web or mobile) | Both UIs + schedule copy + storage compatibility |
+| Walk timer phases | Foreground beep, background notification, 30/40 totals |
+| Notification schedule | Wake 05:45, weekday desk 10–19, Android channels |
+| `static.yml` / Pages | Do not upload `node_modules` (gitignore) |
+| `app.json` plugins | Rebuild / Expo Go compatibility |
 
 ## High-Risk Zones
 
-Do not modify without extra care:
-
-- `STORAGE_KEY` and `state` shape / task index mapping
-- `week12Pattern`, `week34Pattern`, `buildDays`, `tasksFor`
-- Walk timer interval / phase transition (`tick`, `buildPhases`)
-- Destructive reset (`resetBtn`)
-- GitHub Pages workflow (production publish)
+- Storage key / task index mapping (web + mobile)
+- Walk timer wall-clock + notification cancellation
+- GitHub Pages workflow
+- EAS/`app.json` package ids once published
 
 ## Verification Checklist
 
 ```bash
-# install — none
-xdg-open index.html    # or python3 -m http.server 8080
-# tests — none automated
-# lint — none configured
+# Web
+xdg-open index.html
+
+# Mobile
+cd mobile && npm install && npx expo start
+npx tsc --noEmit
+# Later: eas build -p android --profile preview
 ```
 
 Before claiming done:
 
-- [ ] Checkboxes persist across refresh
-- [ ] Week 1–2 vs 3–4 patterns match Schedule tab
-- [ ] Walk timer 30/40 works (start/pause/reset/done)
-- [ ] Reset confirms and clears progress
+- [ ] Web and/or mobile checkboxes persist
+- [ ] Week patterns match Schedule tab
+- [ ] Walk timer 30/40 + background phase alerts
 - [ ] No unrelated files changed
-- [ ] If deploying: Pages artifact contents are intentional
 
 ## Quick Links
 
 - Live site: https://himanshuramavat.github.io/fat-loss-pipeline/
+- Mobile README: [mobile/README.md](./mobile/README.md)
 - Full report: [AI_PROJECT_CONTEXT_REPORT.md](./AI_PROJECT_CONTEXT_REPORT.md)
 - Daily ops: [DAILY_OPS.md](./DAILY_OPS.md)
-- Onboarding prompt: [PROJECT_ONBOARDING_PROMPT.md](./PROJECT_ONBOARDING_PROMPT.md)
-- Deploy: [.github/workflows/static.yml](./.github/workflows/static.yml)

@@ -11,3 +11,16 @@ Thumbs.db
 # Daily-ops session artifacts (local only)
 TASK_BRIEF.md
 SESSION_NOTES.md
+
+# Expo / Node (mobile app)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.mobileprovision
+mobile/*.orig.*
+npm-debug.*
+yarn-error.log
